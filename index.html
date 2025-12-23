@@ -12,59 +12,67 @@
     <title>Huron Master PRO</title>
     
     <style>
+        /* Общие настройки для исключения свайпа */
+        * { box-sizing: border-box; } 
+        
         body { 
             font-family: -apple-system, system-ui, sans-serif; 
             background: #000; color: #eee; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
         }
         
-        #sidebar { width: 100%; max-width: 400px; background: #1a1a1a; padding: 15px; border-bottom: 2px solid #ffcc00; box-sizing: border-box; }
+        #sidebar { 
+            width: 100%; max-width: 100vw; background: #1a1a1a; padding: 10px; 
+            border-bottom: 2px solid #ffcc00; overflow-x: hidden; 
+        }
         
         @media (min-width: 768px) {
             body { flex-direction: row; }
             #sidebar { width: 380px; height: 100vh; border-bottom: none; border-right: 2px solid #ffcc00; }
         }
 
-        .card { background: #262626; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; }
-        h3 { color: #ffcc00; font-size: 0.8em; margin: 0 0 10px 0; text-transform: uppercase; text-align: center; }
+        .card { background: #262626; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #333; }
+        h3 { color: #ffcc00; font-size: 0.75em; margin: 0 0 8px 0; text-transform: uppercase; text-align: center; }
 
-        .angle-control { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .angle-control { display: flex; align-items: center; justify-content: center; gap: 8px; }
         
-        /* Кнопки теперь имеют запрет выделения текста */
         .step-btn { 
             background: #333; color: #ffcc00; border: 1px solid #444; 
-            width: 65px; height: 65px; border-radius: 12px; 
-            font-size: 1.8em; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+            width: 55px; height: 55px; border-radius: 12px; 
+            font-size: 1.6em; font-weight: bold; cursor: pointer;
             user-select: none; -webkit-user-select: none;
-            touch-action: manipulation;
         }
-        .step-btn:active { background: #ffcc00; color: #000; }
 
         input, select { 
             background: #000; border: 1px solid #444; color: #0f0; 
-            padding: 12px; font-size: 1.1em; text-align: center; border-radius: 8px; outline: none;
+            padding: 8px; font-size: 1em; text-align: center; border-radius: 8px; outline: none;
         }
         
-        .main-angle-input { font-size: 2.2em; border-color: #ffcc00; color: #ffcc00; font-weight: bold; width: 130px; }
-        
+        .main-angle-input { font-size: 2em; border-color: #ffcc00; color: #ffcc00; font-weight: bold; width: 110px; }
+
+        /* КОМПАКТНЫЙ ИНСТРУМЕНТ */
+        .tool-inputs { display: flex; gap: 6px; justify-content: center; }
+        .tool-col { flex: 1; min-width: 0; } /* min-width: 0 позволяет flex-элементам сжиматься правильно */
+        .tool-col label { font-size: 0.6em; color: #888; display: block; text-align: center; margin-bottom: 3px; }
+        .tool-col input { width: 100%; padding: 8px 4px; font-size: 0.9em; }
+
         table { width: 100%; border-collapse: collapse; }
-        td { padding: 6px; border: 1px solid #333; text-align: center; }
-        .res-label { font-size: 0.65em; color: #888; text-transform: uppercase; }
-        .res-val { font-weight: bold; font-family: monospace; color: #fff; font-size: 1.2em; }
+        td { padding: 5px; border: 1px solid #333; text-align: center; }
+        .res-label { font-size: 0.6em; color: #888; }
+        .res-val { font-weight: bold; font-family: monospace; color: #fff; font-size: 1.1em; }
         
         #viewport { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; }
         svg { width: 95%; height: 95%; max-height: 35vh; }
         @media (min-width: 768px) { svg { max-height: 80vh; } }
 
-        .btn-save { background: #ffcc00; color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; border-radius: 8px; margin-top: 10px; font-size: 1em; }
-        #toolLog { font-size: 0.75em; margin-top: 10px; max-height: 120px; overflow-y: auto; color: #aaa; }
+        .btn-save { background: #ffcc00; color: #000; border: none; padding: 12px; width: 100%; font-weight: bold; border-radius: 8px; margin-top: 8px; font-size: 0.9em; }
+        #toolLog { font-size: 0.7em; margin-top: 8px; max-height: 100px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <select id="langSel" onchange="run()" style="margin-bottom: 15px;">
+    <select id="langSel" onchange="run()" style="margin-bottom: 10px; font-size: 0.9em;">
         <option value="ru">Русский</option>
         <option value="en">English</option>
         <option value="de">Deutsch</option>
@@ -73,25 +81,23 @@
     <div class="card">
         <h3 id="hA">Угол детали</h3>
         <div class="angle-control">
-            <button class="step-btn" 
-                    onmousedown="startStep(-0.1)" onmouseup="stopStep()" 
-                    onmouseleave="stopStep()" ontouchstart="startStep(-0.1)" 
-                    ontouchend="stopStep()">−</button>
-            
+            <button class="step-btn" onmousedown="startStep(-0.1)" onmouseup="stopStep()" ontouchstart="startStep(-0.1)" ontouchend="stopStep()">−</button>
             <input type="number" id="inpAngle" value="28.0" step="0.1" inputmode="decimal" class="main-angle-input" oninput="run()">
-            
-            <button class="step-btn" 
-                    onmousedown="startStep(0.1)" onmouseup="stopStep()" 
-                    onmouseleave="stopStep()" ontouchstart="startStep(0.1)" 
-                    ontouchend="stopStep()">+</button>
+            <button class="step-btn" onmousedown="startStep(0.1)" onmouseup="stopStep()" ontouchstart="startStep(0.1)" ontouchend="stopStep()">+</button>
         </div>
     </div>
 
     <div class="card">
         <h3 id="hT">Инструмент</h3>
-        <div style="display:flex; gap:8px;">
-            <div style="flex:1;"><label id="lL" style="font-size:0.6em;display:block;text-align:center">L</label><input type="number" id="toolL" value="150" inputmode="decimal" oninput="run()"></div>
-            <div style="flex:1;"><label id="lD" style="font-size:0.6em;display:block;text-align:center">D</label><input type="number" id="toolD" value="50" inputmode="decimal" oninput="run()"></div>
+        <div class="tool-inputs">
+            <div class="tool-col">
+                <label id="lL">Длина L</label>
+                <input type="number" id="toolL" value="150" inputmode="decimal" oninput="run()">
+            </div>
+            <div class="tool-col">
+                <label id="lD">Диам. D</label>
+                <input type="number" id="toolD" value="50" inputmode="decimal" oninput="run()">
+            </div>
         </div>
         <button class="btn-save" id="btnS" onclick="addTool()">СОХРАНИТЬ</button>
     </div>
@@ -130,16 +136,16 @@
 </div>
 
 <script>
+/* (Весь JavaScript остается без изменений, как в нашем стандарте) */
 const texts = {
-    ru: {hA:"Угол детали", hT:"Инструмент", hS:"Лимбы Huron", hD:"Дельты (XYZ)", btnS:"СОХРАНИТЬ"},
-    en: {hA:"Part Angle", hT:"Tool", hS:"Huron Scales", hD:"Offsets (XYZ)", btnS:"SAVE"},
-    de: {hA:"Werkstückwinkel", hT:"Werkzeug", hS:"Huron Skalen", hD:"Deltas (XYZ)", btnS:"SPEICHERN"}
+    ru: {hA:"Угол детали", hT:"Инструмент", hS:"Лимбы Huron", hD:"Дельты (XYZ)", lL:"Длина L", lD:"Диам. D", btnS:"СОХРАНИТЬ"},
+    en: {hA:"Part Angle", hT:"Tool", hS:"Huron Scales", hD:"Offsets (XYZ)", lL:"Length L", lD:"Diam. D", btnS:"SAVE"},
+    de: {hA:"Werkstückwinkel", hT:"Werkzeug", hS:"Huron Skalen", hD:"Deltas (XYZ)", lL:"Länge L", lD:"Durchm. D", btnS:"SPEICHERN"}
 };
 
 let stepInterval = null;
 let stepTimeout = null;
 
-// Функция для одиночного или серийного изменения
 function step(val) {
     let el = document.getElementById('inpAngle');
     let current = parseFloat(el.value) || 0;
@@ -147,15 +153,13 @@ function step(val) {
     run();
 }
 
-// Запуск при зажатии
 function startStep(val) {
-    step(val); // Первый клик сразу
+    step(val);
     stepTimeout = setTimeout(() => {
-        stepInterval = setInterval(() => step(val), 80); // Повтор каждые 80мс
-    }, 400); // Начать "бежать" через 400мс удержания
+        stepInterval = setInterval(() => step(val), 80);
+    }, 400);
 }
 
-// Остановка при отпускании
 function stopStep() {
     clearTimeout(stepTimeout);
     clearInterval(stepInterval);
@@ -172,7 +176,6 @@ function run() {
     let L = parseFloat(document.getElementById('toolL').value) || 0;
     let D = parseFloat(document.getElementById('toolD').value) || 0;
 
-    // Стандартная математика Huron
     let aCalc = 90 - a; 
     let r = aCalc * Math.PI / 180;
     let cB = Math.max(-1, Math.min(1, 2 * Math.cos(r) - 1));
@@ -182,7 +185,6 @@ function run() {
     document.getElementById('outB').innerText = B.toFixed(1) + "°";
     document.getElementById('outC').innerText = C.toFixed(1) + "°";
 
-    // Дельты XYZ
     let tiltRad = a * Math.PI / 180;
     let dx = L * Math.sin(tiltRad);
     let dz = L * (1 - Math.cos(tiltRad));
@@ -193,7 +195,6 @@ function run() {
     document.getElementById('dY').innerText = dy.toFixed(2);
     document.getElementById('dZ').innerText = dz.toFixed(2);
 
-    // Визуализация
     let vt = document.getElementById('vTool');
     vt.setAttribute('width', D);
     vt.setAttribute('x', -D/2);
