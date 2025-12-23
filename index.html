@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <link rel="manifest" href="manifest.json">
     
     <title>Huron Master PRO</title>
+    
     <style>
-        /* Адаптивная верстка */
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            font-family: -apple-system, system-ui, sans-serif; 
             background: #000; color: #eee; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
         }
         
-        /* Sidebar становится верхней или боковой панелью */
-        #sidebar { 
-            width: 100%; max-width: 400px; background: #1a1a1a; 
-            padding: 15px; border-bottom: 2px solid #ffcc00; 
-            overflow-y: auto; box-sizing: border-box;
-        }
+        #sidebar { width: 100%; max-width: 400px; background: #1a1a1a; padding: 15px; border-bottom: 2px solid #ffcc00; box-sizing: border-box; }
         
         @media (min-width: 768px) {
             body { flex-direction: row; }
@@ -29,38 +27,44 @@
 
         .card { background: #262626; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; }
         h3 { color: #ffcc00; font-size: 0.8em; margin: 0 0 10px 0; text-transform: uppercase; text-align: center; }
+
+        .angle-control { display: flex; align-items: center; justify-content: center; gap: 10px; }
         
+        /* Кнопки теперь имеют запрет выделения текста */
+        .step-btn { 
+            background: #333; color: #ffcc00; border: 1px solid #444; 
+            width: 65px; height: 65px; border-radius: 12px; 
+            font-size: 1.8em; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none; -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .step-btn:active { background: #ffcc00; color: #000; }
+
         input, select { 
-            width: 100%; background: #000; border: 1px solid #444; color: #0f0; 
-            padding: 12px; font-size: 1.1em; text-align: center; border-radius: 8px; 
-            outline: none; -webkit-appearance: none; /* Убираем стандартные стили iOS */
+            background: #000; border: 1px solid #444; color: #0f0; 
+            padding: 12px; font-size: 1.1em; text-align: center; border-radius: 8px; outline: none;
         }
         
-        .main-angle-input { font-size: 2em; border-color: #ffcc00; color: #ffcc00; font-weight: bold; }
+        .main-angle-input { font-size: 2.2em; border-color: #ffcc00; color: #ffcc00; font-weight: bold; width: 130px; }
         
         table { width: 100%; border-collapse: collapse; }
-        td { padding: 8px; border: 1px solid #333; text-align: center; }
+        td { padding: 6px; border: 1px solid #333; text-align: center; }
         .res-label { font-size: 0.65em; color: #888; text-transform: uppercase; }
         .res-val { font-weight: bold; font-family: monospace; color: #fff; font-size: 1.2em; }
         
-        #viewport { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; }
-        svg { width: 95%; height: 95%; max-height: 40vh; }
-        
+        #viewport { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; }
+        svg { width: 95%; height: 95%; max-height: 35vh; }
         @media (min-width: 768px) { svg { max-height: 80vh; } }
 
-        .btn-save { 
-            background: #ffcc00; color: #000; border: none; padding: 14px; 
-            width: 100%; font-weight: bold; cursor: pointer; border-radius: 8px; 
-            margin-top: 10px; font-size: 1em;
-        }
-        
-        #toolLog { font-size: 0.8em; margin-top: 10px; max-height: 150px; overflow-y: auto; color: #aaa; }
+        .btn-save { background: #ffcc00; color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; border-radius: 8px; margin-top: 10px; font-size: 1em; }
+        #toolLog { font-size: 0.75em; margin-top: 10px; max-height: 120px; overflow-y: auto; color: #aaa; }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <select id="langSel" onchange="run()" style="margin-bottom: 10px;">
+    <select id="langSel" onchange="run()" style="margin-bottom: 15px;">
         <option value="ru">Русский</option>
         <option value="en">English</option>
         <option value="de">Deutsch</option>
@@ -68,14 +72,26 @@
 
     <div class="card">
         <h3 id="hA">Угол детали</h3>
-        <input type="number" id="inpAngle" value="28" step="0.1" class="main-angle-input" oninput="run()">
+        <div class="angle-control">
+            <button class="step-btn" 
+                    onmousedown="startStep(-0.1)" onmouseup="stopStep()" 
+                    onmouseleave="stopStep()" ontouchstart="startStep(-0.1)" 
+                    ontouchend="stopStep()">−</button>
+            
+            <input type="number" id="inpAngle" value="28.0" step="0.1" inputmode="decimal" class="main-angle-input" oninput="run()">
+            
+            <button class="step-btn" 
+                    onmousedown="startStep(0.1)" onmouseup="stopStep()" 
+                    onmouseleave="stopStep()" ontouchstart="startStep(0.1)" 
+                    ontouchend="stopStep()">+</button>
+        </div>
     </div>
 
     <div class="card">
         <h3 id="hT">Инструмент</h3>
         <div style="display:flex; gap:8px;">
-            <div style="flex:1;"><label id="lL" style="font-size:0.6em;display:block;text-align:center">ДЛИНА L</label><input type="number" id="toolL" value="150" oninput="run()"></div>
-            <div style="flex:1;"><label id="lD" style="font-size:0.6em;display:block;text-align:center">ДИАМЕТР D</label><input type="number" id="toolD" value="50" oninput="run()"></div>
+            <div style="flex:1;"><label id="lL" style="font-size:0.6em;display:block;text-align:center">L</label><input type="number" id="toolL" value="150" inputmode="decimal" oninput="run()"></div>
+            <div style="flex:1;"><label id="lD" style="font-size:0.6em;display:block;text-align:center">D</label><input type="number" id="toolD" value="50" inputmode="decimal" oninput="run()"></div>
         </div>
         <button class="btn-save" id="btnS" onclick="addTool()">СОХРАНИТЬ</button>
     </div>
@@ -90,9 +106,8 @@
 
     <div class="card">
         <h3 id="hD">Дельты (XYZ)</h3>
-        <table>
-            <tr><td class="res-label">ΔX</td><td class="res-label">ΔY</td><td class="res-label">ΔZ</td></tr>
-            <tr><td id="dX" class="res-val" style="color:#ffcc00;">0.00</td><td id="dY" class="res-val" style="color:#ffcc00;">0.00</td><td id="dZ" class="res-val" style="color:#ffcc00;">0.00</td></tr>
+        <table style="color:#ffcc00;">
+            <tr><td id="dX" class="res-val">0.00</td><td id="dY" class="res-val">0.00</td><td id="dZ" class="res-val">0.00</td></tr>
         </table>
     </div>
 
@@ -116,10 +131,35 @@
 
 <script>
 const texts = {
-    ru: {hA:"Угол детали", hT:"Инструмент", hS:"Лимбы Huron", hD:"Дельты (XYZ)", lL:"ДЛИНА L", lD:"ДИАМ. D", btnS:"СОХРАНИТЬ"},
-    en: {hA:"Part Angle", hT:"Tool", hS:"Huron Scales", hD:"Offsets (XYZ)", lL:"LENGTH L", lD:"DIAM. D", btnS:"SAVE"},
-    de: {hA:"Werkstückwinkel", hT:"Werkzeug", hS:"Huron Skalen", hD:"Deltas (XYZ)", lL:"LÄNGE L", lD:"DURCHM. D", btnS:"SPEICHERN"}
+    ru: {hA:"Угол детали", hT:"Инструмент", hS:"Лимбы Huron", hD:"Дельты (XYZ)", btnS:"СОХРАНИТЬ"},
+    en: {hA:"Part Angle", hT:"Tool", hS:"Huron Scales", hD:"Offsets (XYZ)", btnS:"SAVE"},
+    de: {hA:"Werkstückwinkel", hT:"Werkzeug", hS:"Huron Skalen", hD:"Deltas (XYZ)", btnS:"SPEICHERN"}
 };
+
+let stepInterval = null;
+let stepTimeout = null;
+
+// Функция для одиночного или серийного изменения
+function step(val) {
+    let el = document.getElementById('inpAngle');
+    let current = parseFloat(el.value) || 0;
+    el.value = (current + val).toFixed(1);
+    run();
+}
+
+// Запуск при зажатии
+function startStep(val) {
+    step(val); // Первый клик сразу
+    stepTimeout = setTimeout(() => {
+        stepInterval = setInterval(() => step(val), 80); // Повтор каждые 80мс
+    }, 400); // Начать "бежать" через 400мс удержания
+}
+
+// Остановка при отпускании
+function stopStep() {
+    clearTimeout(stepTimeout);
+    clearInterval(stepInterval);
+}
 
 function run() {
     let ln = document.getElementById('langSel').value;
@@ -132,18 +172,17 @@ function run() {
     let L = parseFloat(document.getElementById('toolL').value) || 0;
     let D = parseFloat(document.getElementById('toolD').value) || 0;
 
-    // СТАНДАРТНАЯ МАТЕМАТИКА
+    // Стандартная математика Huron
     let aCalc = 90 - a; 
     let r = aCalc * Math.PI / 180;
-    let cB = 2 * Math.cos(r) - 1;
-    cB = Math.max(-1, Math.min(1, cB));
+    let cB = Math.max(-1, Math.min(1, 2 * Math.cos(r) - 1));
     let B = Math.acos(cB) * 180 / Math.PI;
     let C = (Math.abs(aCalc) > 0.01) ? (Math.acos(Math.tan(r / 2)) * 180 / Math.PI - 180) : -180;
 
     document.getElementById('outB').innerText = B.toFixed(1) + "°";
     document.getElementById('outC').innerText = C.toFixed(1) + "°";
 
-    // ДЕЛЬТЫ
+    // Дельты XYZ
     let tiltRad = a * Math.PI / 180;
     let dx = L * Math.sin(tiltRad);
     let dz = L * (1 - Math.cos(tiltRad));
@@ -154,7 +193,7 @@ function run() {
     document.getElementById('dY').innerText = dy.toFixed(2);
     document.getElementById('dZ').innerText = dz.toFixed(2);
 
-    // ВИЗУАЛИЗАЦИЯ
+    // Визуализация
     let vt = document.getElementById('vTool');
     vt.setAttribute('width', D);
     vt.setAttribute('x', -D/2);
@@ -164,20 +203,7 @@ function run() {
     document.getElementById('headGroup').setAttribute('transform', `rotate(${-a} 0 0)`);
 }
 
-function addTool() {
-    let L = document.getElementById('toolL').value;
-    let B = document.getElementById('outB').innerText;
-    let C = document.getElementById('outC').innerText;
-    let log = `<div style="border-bottom:1px solid #333; padding:8px; font-family:monospace; display:flex; justify-content:space-between;">
-        <span>L:${L}</span> <span>B:${B}</span> <span>C:${C}</span>
-    </div>`;
-    document.getElementById('toolLog').innerHTML = log + document.getElementById('toolLog').innerHTML;
-}
-
 window.onload = run;
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
 </script>
 </body>
 </html>
