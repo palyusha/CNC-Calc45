@@ -1,0 +1,16 @@
+{
+  "name": "Huron Master PRO",
+  "short_name": "HuronPRO",
+  "description": "Расчет лимбов и дельт для станков Huron",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ffcc00",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

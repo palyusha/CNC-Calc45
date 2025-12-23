@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Huron Master PRO</title>
+    <style>
+        /* Адаптивная верстка */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #000; color: #eee; margin: 0; 
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
+        }
+        
+        /* Sidebar становится верхней или боковой панелью */
+        #sidebar { 
+            width: 100%; max-width: 400px; background: #1a1a1a; 
+            padding: 15px; border-bottom: 2px solid #ffcc00; 
+            overflow-y: auto; box-sizing: border-box;
+        }
+        
+        @media (min-width: 768px) {
+            body { flex-direction: row; }
+            #sidebar { width: 380px; height: 100vh; border-bottom: none; border-right: 2px solid #ffcc00; }
+        }
+
+        .card { background: #262626; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; }
+        h3 { color: #ffcc00; font-size: 0.8em; margin: 0 0 10px 0; text-transform: uppercase; text-align: center; }
+        
+        input, select { 
+            width: 100%; background: #000; border: 1px solid #444; color: #0f0; 
+            padding: 12px; font-size: 1.1em; text-align: center; border-radius: 8px; 
+            outline: none; -webkit-appearance: none; /* Убираем стандартные стили iOS */
+        }
+        
+        .main-angle-input { font-size: 2em; border-color: #ffcc00; color: #ffcc00; font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 8px; border: 1px solid #333; text-align: center; }
+        .res-label { font-size: 0.65em; color: #888; text-transform: uppercase; }
+        .res-val { font-weight: bold; font-family: monospace; color: #fff; font-size: 1.2em; }
+        
+        #viewport { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; }
+        svg { width: 95%; height: 95%; max-height: 40vh; }
+        
+        @media (min-width: 768px) { svg { max-height: 80vh; } }
+
+        .btn-save { 
+            background: #ffcc00; color: #000; border: none; padding: 14px; 
+            width: 100%; font-weight: bold; cursor: pointer; border-radius: 8px; 
+            margin-top: 10px; font-size: 1em;
+        }
+        
+        #toolLog { font-size: 0.8em; margin-top: 10px; max-height: 150px; overflow-y: auto; color: #aaa; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <select id="langSel" onchange="run()" style="margin-bottom: 10px;">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+    </select>
+
+    <div class="card">
+        <h3 id="hA">Угол детали</h3>
+        <input type="number" id="inpAngle" value="28" step="0.1" class="main-angle-input" oninput="run()">
+    </div>
+
+    <div class="card">
+        <h3 id="hT">Инструмент</h3>
+        <div style="display:flex; gap:8px;">
+            <div style="flex:1;"><label id="lL" style="font-size:0.6em;display:block;text-align:center">ДЛИНА L</label><input type="number" id="toolL" value="150" oninput="run()"></div>
+            <div style="flex:1;"><label id="lD" style="font-size:0.6em;display:block;text-align:center">ДИАМЕТР D</label><input type="number" id="toolD" value="50" oninput="run()"></div>
+        </div>
+        <button class="btn-save" id="btnS" onclick="addTool()">СОХРАНИТЬ</button>
+    </div>
+
+    <div class="card">
+        <h3 id="hS">Лимбы Huron</h3>
+        <table>
+            <tr><td class="res-label">C</td><td class="res-label">B</td></tr>
+            <tr><td id="outC" class="res-val" style="color:#00a2ff;">-126.9°</td><td id="outB" class="res-val" style="color:#00ff6a;">93.5°</td></tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3 id="hD">Дельты (XYZ)</h3>
+        <table>
+            <tr><td class="res-label">ΔX</td><td class="res-label">ΔY</td><td class="res-label">ΔZ</td></tr>
+            <tr><td id="dX" class="res-val" style="color:#ffcc00;">0.00</td><td id="dY" class="res-val" style="color:#ffcc00;">0.00</td><td id="dZ" class="res-val" style="color:#ffcc00;">0.00</td></tr>
+        </table>
+    </div>
+
+    <div id="toolLog"></div>
+</div>
+
+<div id="viewport">
+    <svg viewBox="0 0 400 400">
+        <line x1="20" y1="360" x2="380" y2="360" stroke="#333" stroke-width="2" />
+        <g transform="translate(200, 100)">
+            <g id="headGroup">
+                <path d="M-30,0 L30,0 L0,50 Z" fill="#222" stroke="#00ff6a" />
+                <rect id="vTool" fill="rgba(255, 204, 0, 0.6)" stroke="#ffcc00" />
+                <g id="vDetail">
+                    <line x1="-150" y1="0" x2="150" y2="0" stroke="#00a2ff" stroke-width="3" stroke-dasharray="5" />
+                </g>
+            </g>
+        </g>
+    </svg>
+</div>
+
+<script>
+const texts = {
+    ru: {hA:"Угол детали", hT:"Инструмент", hS:"Лимбы Huron", hD:"Дельты (XYZ)", lL:"ДЛИНА L", lD:"ДИАМ. D", btnS:"СОХРАНИТЬ"},
+    en: {hA:"Part Angle", hT:"Tool", hS:"Huron Scales", hD:"Offsets (XYZ)", lL:"LENGTH L", lD:"DIAM. D", btnS:"SAVE"},
+    de: {hA:"Werkstückwinkel", hT:"Werkzeug", hS:"Huron Skalen", hD:"Deltas (XYZ)", lL:"LÄNGE L", lD:"DURCHM. D", btnS:"SPEICHERN"}
+};
+
+function run() {
+    let ln = document.getElementById('langSel').value;
+    for(let key in texts[ln]) {
+        let el = document.getElementById(key);
+        if(el) el.innerText = texts[ln][key];
+    }
+
+    let a = parseFloat(document.getElementById('inpAngle').value) || 0;
+    let L = parseFloat(document.getElementById('toolL').value) || 0;
+    let D = parseFloat(document.getElementById('toolD').value) || 0;
+
+    // СТАНДАРТНАЯ МАТЕМАТИКА
+    let aCalc = 90 - a; 
+    let r = aCalc * Math.PI / 180;
+    let cB = 2 * Math.cos(r) - 1;
+    cB = Math.max(-1, Math.min(1, cB));
+    let B = Math.acos(cB) * 180 / Math.PI;
+    let C = (Math.abs(aCalc) > 0.01) ? (Math.acos(Math.tan(r / 2)) * 180 / Math.PI - 180) : -180;
+
+    document.getElementById('outB').innerText = B.toFixed(1) + "°";
+    document.getElementById('outC').innerText = C.toFixed(1) + "°";
+
+    // ДЕЛЬТЫ
+    let tiltRad = a * Math.PI / 180;
+    let dx = L * Math.sin(tiltRad);
+    let dz = L * (1 - Math.cos(tiltRad));
+    let dy = dx * Math.sin(C * Math.PI / 180);
+    let dx_f = dx * Math.cos(C * Math.PI / 180);
+
+    document.getElementById('dX').innerText = dx_f.toFixed(2);
+    document.getElementById('dY').innerText = dy.toFixed(2);
+    document.getElementById('dZ').innerText = dz.toFixed(2);
+
+    // ВИЗУАЛИЗАЦИЯ
+    let vt = document.getElementById('vTool');
+    vt.setAttribute('width', D);
+    vt.setAttribute('x', -D/2);
+    vt.setAttribute('y', 55);
+    vt.setAttribute('height', L);
+    document.getElementById('vDetail').setAttribute('transform', `translate(0, ${55 + L})`);
+    document.getElementById('headGroup').setAttribute('transform', `rotate(${-a} 0 0)`);
+}
+
+function addTool() {
+    let L = document.getElementById('toolL').value;
+    let B = document.getElementById('outB').innerText;
+    let C = document.getElementById('outC').innerText;
+    let log = `<div style="border-bottom:1px solid #333; padding:8px; font-family:monospace; display:flex; justify-content:space-between;">
+        <span>L:${L}</span> <span>B:${B}</span> <span>C:${C}</span>
+    </div>`;
+    document.getElementById('toolLog').innerHTML = log + document.getElementById('toolLog').innerHTML;
+}
+
+window.onload = run;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
